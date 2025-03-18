@@ -36,3 +36,4 @@ phpstan.neon
 ###< other element ###
 .env.dev
 .env.test
+.env.local
