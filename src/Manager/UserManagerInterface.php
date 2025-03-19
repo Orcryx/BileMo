@@ -10,4 +10,5 @@ interface UserManagerInterface
     public function findAll(): array;
     public function create(User $user, bool $flush = true): void;
     public function remove(User $user, bool $flush = true): void;
+    public function edit(User $user, bool $flush = true): void;
 }

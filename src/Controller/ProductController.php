@@ -23,7 +23,7 @@ final class ProductController extends AbstractController
         return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/api/product/{id}', name: 'product')]
+    #[Route('/api/products/{id}', name: 'product')]
     public function getProductDetails(int $id): JsonResponse
     {
         $productDetails = $this->productManager->find($id);

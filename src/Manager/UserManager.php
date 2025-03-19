@@ -56,4 +56,29 @@ class UserManager implements UserManagerInterface
     {
         return $this->entityManager->getRepository(User::class)->findAll();
     }
+
+    public function edit(User $user, bool $flush = true): void
+    {
+        if (!$user->getEmail() || !$user->getPassword()) {
+            throw new \InvalidArgumentException("Email et mot de passe sont requis.");
+        }
+
+        // Vérifier si le mot de passe a changé avant de le hacher
+        if (!password_get_info($user->getPassword())['algo']) {
+            $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT));
+        }
+
+        // Définition de la date de création
+        if (!$user->getCreateAt()) {
+            $user->setCreateAt(new \DateTimeImmutable());
+        }
+
+        // Mise à jour de la date de modification
+        $user->setUpdateAt(new \DateTimeImmutable());
+
+        $this->entityManager->persist($user);
+        if ($flush) {
+            $this->entityManager->flush();
+        }
+    }
 }
