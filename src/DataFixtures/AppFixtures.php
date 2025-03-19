@@ -60,7 +60,7 @@ class AppFixtures extends Fixture
             $manager->persist($user);
         }
 
-        // Création de 40 utilisateurs sans le rôle ROLE_CLIENT
+        // Création de 90 utilisateurs sans le rôle ROLE_CLIENT
         for ($i = 0; $i < 90; ++$i) {
             $user = new User();
             $user->setEmail($faker->unique()->email);
@@ -70,6 +70,8 @@ class AppFixtures extends Fixture
             $user->setCreateAt(new \DateTimeImmutable());
             $user->setUpdateAt(new \DateTimeImmutable());
             $user->setCustomer($customers[array_rand($customers)]); // Attribution aléatoire d'un customer
+            $user->setFirstName($faker->firstName());
+            $user->setLastName($faker->lastName());
 
             $manager->persist($user);
         }
