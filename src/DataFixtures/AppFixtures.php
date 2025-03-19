@@ -60,10 +60,12 @@ class AppFixtures extends Fixture
             $manager->persist($user);
         }
 
-        // Création de 40 utilisateurs sans le rôle ROLE_CLIENT
+        // Création de 90 utilisateurs sans le rôle ROLE_CLIENT
         for ($i = 0; $i < 90; ++$i) {
             $user = new User();
             $user->setEmail($faker->unique()->email);
+            $user->setFirstName($faker->firstName());
+            $user->setLastName($faker->lastName());
             $user->setRoles(['ROLE_USER']);
             $user->setPassword($this->userPasswordHasher->hashPassword($user, 'password'));
             $user->setAddress($faker->address());
