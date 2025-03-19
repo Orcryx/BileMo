@@ -14,22 +14,6 @@ class ProductManager implements ProductManagerInterface
         $this->entityManager = $entityManager;
     }
 
-    public function save(Product $product, bool $flush = true): void
-    {
-        $this->entityManager->persist($product);
-        if ($flush) {
-            $this->entityManager->flush();
-        }
-    }
-
-    public function remove(Product $product, bool $flush = true): void
-    {
-        $this->entityManager->remove($product);
-        if ($flush) {
-            $this->entityManager->flush();
-        }
-    }
-
     public function find(int $id): ?Product
     {
         return $this->entityManager->getRepository(Product::class)->find($id);

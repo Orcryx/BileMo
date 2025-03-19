@@ -12,28 +12,23 @@ use Symfony\Component\Serializer\SerializerInterface;
 final class ProductController extends AbstractController
 {
 
-    public function __construct(private readonly ProductManagerInterface $productManager) {}
+    public function __construct(private readonly ProductManagerInterface $productManager, private readonly SerializerInterface $serializer) {}
 
     #[Route('/api/products', name: 'products', methods: ['GET'])]
-    public function getProductsList(SerializerInterface $serializer): JsonResponse
+    public function getProductsList(): JsonResponse
     {
         $productList = $this->productManager->findAll();
-        $jsonProductList = $serializer->serialize($productList, 'json');
+        $jsonProductList = $this->serializer->serialize($productList, 'json', ['groups' => 'productList']);
 
-        return new JsonResponse([
-            'products' => $jsonProductList,
-            Response::HTTP_OK,
-            [],
-            true
-        ]);
+        return new JsonResponse(['products' => json_decode($jsonProductList)], Response::HTTP_OK);
     }
 
-    #[Route('/api/products', name: 'product')]
-    public function getProductDetails(): JsonResponse
+    #[Route('/api/product/{id}', name: 'product')]
+    public function getProductDetails(int $id): JsonResponse
     {
-        return new JsonResponse([
-            'message' => 'Les détails du produit',
-            'path' => 'src/Controller/ProductController.php',
-        ]);
+        $productDetails = $this->productManager->find($id);
+        $jsonProductDetail = $this->serializer->serialize($productDetails, 'json', ['groups' => 'productDetails']);
+
+        return new JsonResponse(['products' => json_decode($jsonProductDetail)], Response::HTTP_OK);
     }
 }
