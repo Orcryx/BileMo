@@ -37,3 +37,7 @@ phpstan.neon
 .env.dev
 .env.test
 .env.local
+
+# Ignorer les certificats SSL locaux
+127.0.0.1+1-key.pem
+127.0.0.1+1.pem
