@@ -23,6 +23,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["usersList", "userDetails"])]
     private ?string $email = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["userDetails"])]
+    private ?string $firstName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["userDetails"])]
+    private ?string $lastName = null;
+
     /**
      * @var list<string> The user roles
      */
@@ -49,16 +57,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?\DateTimeImmutable $updateAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'users')]
-    #[Groups(["userDetails"])]
+    #[Groups(["usersList", "userDetails"])]
     private ?Customer $customer = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["userDetails"])]
-    private ?string $firstName = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["userDetails"])]
-    private ?string $lastName = null;
 
     public function getId(): ?int
     {

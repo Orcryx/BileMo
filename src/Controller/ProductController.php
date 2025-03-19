@@ -20,15 +20,18 @@ final class ProductController extends AbstractController
         $productList = $this->productManager->findAll();
         $jsonProductList = $this->serializer->serialize($productList, 'json', ['groups' => 'productList']);
 
-        return new JsonResponse(['products' => json_decode($jsonProductList)], Response::HTTP_OK);
+        return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);
     }
 
     #[Route('/api/product/{id}', name: 'product')]
     public function getProductDetails(int $id): JsonResponse
     {
         $productDetails = $this->productManager->find($id);
+        if (!$productDetails) {
+            return new JsonResponse(['message' => ' produit non trouvé'], Response::HTTP_NOT_FOUND);
+        }
         $jsonProductDetail = $this->serializer->serialize($productDetails, 'json', ['groups' => 'productDetails']);
 
-        return new JsonResponse(['products' => json_decode($jsonProductDetail)], Response::HTTP_OK);
+        return new JsonResponse($jsonProductDetail, Response::HTTP_OK, [], true);
     }
 }

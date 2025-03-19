@@ -64,14 +64,14 @@ class AppFixtures extends Fixture
         for ($i = 0; $i < 90; ++$i) {
             $user = new User();
             $user->setEmail($faker->unique()->email);
+            $user->setFirstName($faker->firstName());
+            $user->setLastName($faker->lastName());
             $user->setRoles(['ROLE_USER']);
             $user->setPassword($this->userPasswordHasher->hashPassword($user, 'password'));
             $user->setAddress($faker->address());
             $user->setCreateAt(new \DateTimeImmutable());
             $user->setUpdateAt(new \DateTimeImmutable());
             $user->setCustomer($customers[array_rand($customers)]); // Attribution aléatoire d'un customer
-            $user->setFirstName($faker->firstName());
-            $user->setLastName($faker->lastName());
 
             $manager->persist($user);
         }
