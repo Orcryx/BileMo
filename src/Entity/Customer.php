@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
 class Customer
@@ -17,10 +18,12 @@ class Customer
     #[Groups(["customersList", "customerDetails", "userDetails"])]
     private ?int $id = null;
 
+    #[Assert\NotBlank(message: 'Le champs "name" du customer est obligatoire.')]
     #[ORM\Column(length: 255)]
     #[Groups(["customersList", "customerDetails", "userDetails"])]
     private ?string $name = null;
 
+    #[Assert\NotBlank(message: 'Le champs "email" du customer est obligatoire.')]
     #[ORM\Column(length: 255)]
     #[Groups(["customerDetails"])]
     private ?string $email = null;
