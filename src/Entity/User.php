@@ -21,6 +21,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[Assert\NotBlank(message: 'Le champs "email" de l\'ulisateur est obligatoire.')]
+    #[Assert\Email(message: 'Le champs email de l\'ulisateur {{ value }} n\'est pas valide.')]
     #[ORM\Column(length: 180)]
     #[Groups(["usersList", "userDetails"])]
     private ?string $email = null;
@@ -37,6 +38,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var list<string> The user roles
      */
     #[Assert\NotBlank(message: 'Le champs "roles" de l\'ulisateur est obligatoire.')]
+    #[Assert\Json(message: "Vous avez saisi un JSON non valide.")]
     #[ORM\Column]
     #[Groups(["userDetails"])]
     private array $roles = [];
@@ -45,6 +47,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[Assert\NotBlank(message: 'Le champs "password" de l\'ulisateur est obligatoire.')]
+    #[Assert\PasswordStrength(['message' => 'Votre mot de passe est trop facile à deviner. La politique de sécurité de l\'entreprise exige l\'utilisation d\'un mot de passe plus fort.'])]
+    #[Assert\NotCompromisedPassword]
     #[ORM\Column]
     private ?string $password = null;
 
