@@ -24,6 +24,7 @@ class Customer
     private ?string $name = null;
 
     #[Assert\NotBlank(message: 'Le champs "email" du customer est obligatoire.')]
+    #[Assert\Email(message: 'Le champs "email" du customer {{ value }} n\'est pas valide.')]
     #[ORM\Column(length: 255)]
     #[Groups(["customerDetails"])]
     private ?string $email = null;
