@@ -15,6 +15,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Symfony\Contracts\Cache\CacheInterface;
 
 class UserController extends AbstractController
 {
@@ -22,12 +24,15 @@ class UserController extends AbstractController
     public function __construct(private readonly UserManagerInterface $userManager, private readonly SerializerInterface $serializer) {}
 
     #[Route('/api/users', name: 'users_list', methods: ['GET'])]
-    public function getUsersList(): JsonResponse
+    public function getUsersList(Request $request): JsonResponse
     {
         /** @var User $currentUser */
         $currentUser = $this->getUser();
 
-        $users = $this->userManager->findAll($currentUser);
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 3);
+
+        $users = $this->userManager->findAll($currentUser, $page, $limit);
         $jsonUsers = $this->serializer->serialize($users, 'json', ['groups' => 'usersList']);
 
         return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);

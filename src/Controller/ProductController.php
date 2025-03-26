@@ -8,6 +8,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use App\Manager\ProductManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\HttpFoundation\Request;
+
 
 final class ProductController extends AbstractController
 {
@@ -15,9 +17,12 @@ final class ProductController extends AbstractController
     public function __construct(private readonly ProductManagerInterface $productManager, private readonly SerializerInterface $serializer) {}
 
     #[Route('/api/products', name: 'products', methods: ['GET'])]
-    public function getProductsList(): JsonResponse
+    public function getProductsList(Request $request): JsonResponse
     {
-        $productList = $this->productManager->findAll();
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 3);
+
+        $productList = $this->productManager->findAll($page, $limit);
         $jsonProductList = $this->serializer->serialize($productList, 'json', ['groups' => 'productList']);
 
         return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);

@@ -61,14 +61,15 @@ class UserManager implements UserManagerInterface
             ->getOneOrNullResult();
     }
 
-    public function findAll(User $currentUser): array
+    public function findAll(User $currentUser, int $page, int $limit): array
     {
-        return $this->entityManager->getRepository(User::class)
+        $usersPage = $this->entityManager->getRepository(User::class)
             ->createQueryBuilder('u')
             ->where('u.customer = :customer')
             ->setParameter('customer', $currentUser)
-            ->getQuery()
-            ->getResult();
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+        return $usersPage->getQuery()->getResult();
     }
 
     public function edit(User $user, bool $flush = true): void
