@@ -8,29 +8,32 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
+#[UniqueEntity('email')]
 class Customer
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["customersList", "customerDetails", "userDetails"])]
+    #[Groups(["customersList", "customerDetails", "userDetails", "usersList"])]
     private ?int $id = null;
 
     #[Assert\NotBlank(message: 'Le champs "name" du customer est obligatoire.')]
     #[ORM\Column(length: 255)]
-    #[Groups(["customersList", "customerDetails", "userDetails"])]
+    #[Groups(["customersList", "customerDetails", "userDetails", "usersList"])]
     private ?string $name = null;
 
     #[Assert\NotBlank(message: 'Le champs "email" du customer est obligatoire.')]
     #[Assert\Email(message: 'Le champs "email" du customer {{ value }} n\'est pas valide.')]
     #[ORM\Column(length: 255)]
-    #[Groups(["customerDetails"])]
+    #[Groups(["customerDetails", "usersList"])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["customerDetails"])]
+    #[Groups(["customerDetails", "usersList"])]
     private ?string $address = null;
 
     #[ORM\Column]

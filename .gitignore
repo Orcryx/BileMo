@@ -41,3 +41,6 @@ phpstan.neon
 # Ignorer les certificats SSL locaux
 127.0.0.1+1-key.pem
 127.0.0.1+1.pem
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+###< lexik/jwt-authentication-bundle ###
