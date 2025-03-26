@@ -39,8 +39,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var list<string> The user roles
      */
-    #[Assert\Type(type: 'array', message: "Le champ 'roles' doit être un tableau.")]    #[ORM\Column]
+    #[Assert\Type(type: 'array', message: "Le champ 'roles' doit être un tableau.")]
     #[Groups(["userDetails"])]
+    #[ORM\Column]
     private array $roles = [];
 
     /**
@@ -96,13 +97,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return (string) $this->email;
     }
 
-    /**
-     * @deprecated since Symfony 5.3, use getUserIdentifier instead
-     */
-    public function getUsername(): string
-    {
-        return $this->getUserIdentifier();
-    }
 
     /**
      * @see UserInterface
