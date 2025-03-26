@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserController extends AbstractController
 {
@@ -44,23 +44,28 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/users', name: 'user_create', methods: ['POST'])]
-    public function createUser(Request $request, UrlGeneratorInterface $urlGenerator,  CustomerManagerInterface $customerManager): JsonResponse
+    public function createUser(Request $request, UrlGeneratorInterface $urlGenerator,  CustomerManagerInterface $customerManager, ValidatorInterface $validator): JsonResponse
     {
         // Désérialisation du JSON en objet User
         $user = $this->serializer->deserialize($request->getContent(), User::class, 'json');
         $content = $request->toArray();
-        $isCustomer = $content['customer'] ?? -1;
+        $isCustomer = $content['customer']['id'] ?? -1;
+
+        //Gérer les erreurs de validation
+        $errors = $validator->validate($user);
+        if ($errors->count() > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = [
+                    'field' => $error->getPropertyPath(),
+                    'message' => $error->getMessage()
+                ];
+            }
+            return new JsonResponse($this->serializer->serialize($errorMessages, 'json'), Response::HTTP_BAD_REQUEST, [], true);
+        }
 
         $customer = $customerManager->find($isCustomer);
-        if (!$customer) {
-            return new JsonResponse(['message' => 'Client non trouvé'], Response::HTTP_BAD_REQUEST);
-        }
         $user->setCustomer($customer);
-
-        // Vérification des champs obligatoires
-        if (!$user->getEmail() || !$user->getPassword()) {
-            return new JsonResponse(['message' => 'Email et mot de passe sont requis.'], Response::HTTP_BAD_REQUEST);
-        }
 
         // Sauvegarde du nouvel utilisateur
         $this->userManager->create($user);
@@ -74,12 +79,22 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/users/{id}', name: 'user_update', methods: ['PUT'])]
-    public function updateUser(Request $request, UrlGeneratorInterface $urlGenerator, User $currentUser, int $id, CustomerManagerInterface $customerManager): JsonResponse
+    public function updateUser(Request $request, UrlGeneratorInterface $urlGenerator, User $currentUser, int $id, CustomerManagerInterface $customerManager, ValidatorInterface  $validator): JsonResponse
     {
         // Vérifier si l'utilisateur existe
         $user = $this->userManager->find($id);
-        if (!$user) {
-            return new JsonResponse(['message' => 'Utilisateur non trouvé.'], Response::HTTP_NOT_FOUND);
+
+        //Gérer les erreurs de validation
+        $errors = $validator->validate($user);
+        if ($errors->count() > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = [
+                    'field' => $error->getPropertyPath(),
+                    'message' => $error->getMessage()
+                ];
+            }
+            return new JsonResponse($this->serializer->serialize($errorMessages, 'json'), Response::HTTP_BAD_REQUEST, [], true);
         }
 
         // Désérialisation du JSON en objet User
@@ -89,11 +104,6 @@ class UserController extends AbstractController
             'json',
             [AbstractNormalizer::OBJECT_TO_POPULATE => $currentUser]
         );
-
-        // Vérification des champs obligatoires
-        if (!$updateUser->getEmail() || !$updateUser->getPassword()) {
-            return new JsonResponse(['message' => 'Email et mot de passe sont requis.'], Response::HTTP_BAD_REQUEST);
-        }
 
         // Mise à jour du Customer si présent dans la requête
         $content = $request->toArray();
@@ -114,7 +124,6 @@ class UserController extends AbstractController
 
         return new JsonResponse($jsonUser, Response::HTTP_OK, ['Location' => $location], true);
     }
-
 
 
     #[Route('/api/users/{id}', name: 'user_delete', methods: ['DELETE'])]

@@ -16,11 +16,17 @@ final class MyEventListener
         $exception = $event->getThrowable();
         $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
 
-        $data = [
-            'status' => $statusCode,
-            'message' => $exception->getMessage(),
-        ];
-
-        $event->setResponse(new JsonResponse($data, $statusCode));
+        if ($exception instanceof HttpException) {
+            $data = [
+                'status' => $statusCode,
+                'message' => $exception->getMessage()
+            ];
+        } else {
+            $data = [
+                'status' => 500,
+                'message' => $exception->getMessage()
+            ];
+        }
+        $event->setResponse(new JsonResponse($data));
     }
 }
