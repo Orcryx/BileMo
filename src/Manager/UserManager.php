@@ -4,6 +4,7 @@ namespace App\Manager;
 
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class UserManager implements UserManagerInterface
 {

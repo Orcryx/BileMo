@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
@@ -19,6 +20,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["usersList", "userDetails"])]
     private ?int $id = null;
 
+    #[Assert\NotBlank(message: 'Le champs "email" de l\'ulisateur est obligatoire.')]
+    #[Assert\Email(message: 'Le champs email de l\'ulisateur {{ value }} n\'est pas valide.')]
     #[ORM\Column(length: 180)]
     #[Groups(["usersList", "userDetails"])]
     private ?string $email = null;
@@ -34,13 +37,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var list<string> The user roles
      */
-    #[ORM\Column]
+    #[Assert\Type(type: 'array', message: "Le champ 'roles' doit être un tableau.")]    #[ORM\Column]
     #[Groups(["userDetails"])]
     private array $roles = [];
 
     /**
      * @var string The hashed password
      */
+    #[Assert\NotBlank(message: 'Le champs "password" de l\'ulisateur est obligatoire.')]
+    #[Assert\PasswordStrength(['message' => 'Votre mot de passe est trop facile à deviner. La politique de sécurité de l\'entreprise exige l\'utilisation d\'un mot de passe plus fort.'])]
     #[ORM\Column]
     private ?string $password = null;
 

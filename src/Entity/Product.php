@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 class Product
@@ -15,34 +17,43 @@ class Product
     #[Groups(["productList", "productDetails"])]
     private ?int $id = null;
 
+    #[Assert\NotBlank(message: 'Le champs "name" du produit est obligatoire.')]
+    #[Assert\Regex('/^[a-zA-Z]{5,}[a-zA-Z0-9\- ]*$/', message: 'Le titre doit contenir au moins 5 lettres et peut inclure des chiffres et des tirets.')]
     #[ORM\Column(length: 255)]
     #[Groups(["productList", "productDetails"])]
     private ?string $name = null;
 
+    #[Assert\NotBlank(message: 'Le champs "price" du produit est obligatoire.')]
     #[ORM\Column]
     #[Groups(["productDetails"])]
     private ?float $price = null;
 
+    #[Assert\NotBlank(message: 'Le champs "screenSize" est obligatoire.')]
     #[ORM\Column]
     #[Groups(["productDetails"])]
     private ?int $screenSize = null;
 
+    #[Assert\NotBlank(message: 'Le champs "ram" est obligatoire.')]
     #[ORM\Column]
     #[Groups(["productDetails"])]
     private ?int $ram = null;
 
+    #[Assert\NotBlank(message: 'Le champs "storage" est obligatoire.')]
     #[ORM\Column]
     #[Groups(["productDetails"])]
     private ?int $storage = null;
 
+    #[Assert\NotBlank(message: 'Le champs "color" est obligatoire.')]
     #[ORM\Column(length: 255)]
     #[Groups(["productDetails"])]
     private ?string $color = null;
 
+    #[Assert\NotBlank(message: 'Le champs "createAt" est obligatoire.')]
     #[ORM\Column]
     #[Groups(["productList", "productDetails"])]
     private ?\DateTimeImmutable $createAt = null;
 
+    #[Assert\NotBlank(message: 'Le champs "updateAt" est obligatoire.')]
     #[ORM\Column]
     #[Groups(["productDetails"])]
     private ?\DateTimeImmutable $updateAt = null;
