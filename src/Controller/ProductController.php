@@ -28,17 +28,17 @@ final class ProductController extends AbstractController
 
         //item = stocker en cache, echo pour le debug, tag pour permettre de supprimer tous les éléments associés en une fois.
         //créer une condition qui verifie si ce qui est retourné par la fonction est déjà dans le cache
-        $productsList = $this->cache->get($idCache, function (ItemInterface $item) use ($page, $limit) {
+        $products = $this->cache->get($idCache, function (ItemInterface $item) use ($page, $limit) {
             // echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
 
             $item->tag(['productsCache']); // Ajout du tag pour invalidation future
 
             // Récupération des produits via le manager
-            return $this->productManager->findAll($page, $limit);
+            $productsList = $this->productManager->findAll($page, $limit);
+            return $this->serializer->serialize($productsList, 'json', ['groups' => 'productList']);
         });
-        $jsonProductList = $this->serializer->serialize($productsList, 'json', ['groups' => 'productList']);
 
-        return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);
+        return new JsonResponse($products, Response::HTTP_OK, [], true);
     }
 
     #[Route('/api/products/{id}', name: 'product')]
@@ -50,9 +50,9 @@ final class ProductController extends AbstractController
         //Mise en cache
         $jsonProductDetails = $this->cache->get($idCache, function (ItemInterface $item) use ($id) {
 
-            echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
+            // echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
 
-            $item->tag(['productDetails']);
+            $item->tag(['productsCache']);
 
             $productDetails = $this->productManager->find($id);
             if (!$productDetails) {
