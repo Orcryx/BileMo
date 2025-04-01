@@ -15,10 +15,11 @@ class UserManager implements UserManagerInterface
         $this->entityManager = $entityManager;
     }
 
-    public function create(User $user, bool $flush = true): void
+    public function create(User $user, User $currentUser, bool $flush = true): void
     {
-        if (!$user->getEmail() || !$user->getPassword()) {
-            throw new \InvalidArgumentException("Email et mot de passe sont requis.");
+        // Vérifier que l'utilisateur connecté appartient au même customer
+        if ($user->getCustomer() !== $currentUser->getCustomer()) {
+            throw new AccessDeniedException("Vous ne pouvez créer des utilisateurs que pour votre propre entreprise.");
         }
 
         // Hachage du mot de passe
@@ -48,22 +49,31 @@ class UserManager implements UserManagerInterface
         }
     }
 
-    public function find(int $id): ?User
+    public function find(int $id, User $currentUser): ?User
     {
-        return $this->entityManager->getRepository(User::class)->find($id);
+        return $this->entityManager->getRepository(User::class)
+            ->createQueryBuilder('u')
+            ->where('u.id = :id')
+            ->andWhere('u.customer = :customer')
+            ->setParameter('id', $id)
+            ->setParameter('customer', $currentUser)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
-    public function findAll(): array
+    public function findAll(User $currentUser, int $page, int $limit): array
     {
-        return $this->entityManager->getRepository(User::class)->findAll();
+        $usersPage = $this->entityManager->getRepository(User::class)
+            ->createQueryBuilder('u')
+            ->where('u.customer = :customer')
+            ->setParameter('customer', $currentUser)
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+        return $usersPage->getQuery()->getResult();
     }
 
     public function edit(User $user, bool $flush = true): void
     {
-        if (!$user->getEmail() || !$user->getPassword()) {
-            throw new \InvalidArgumentException("Email et mot de passe sont requis.");
-        }
-
         // Vérifier si le mot de passe a changé avant de le hacher
         if (!password_get_info($user->getPassword())['algo']) {
             $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT));

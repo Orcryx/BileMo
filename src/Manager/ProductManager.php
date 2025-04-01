@@ -19,8 +19,12 @@ class ProductManager implements ProductManagerInterface
         return $this->entityManager->getRepository(Product::class)->find($id);
     }
 
-    public function findAll(): array
+    public function findAll(int $page, int $limit): array
     {
-        return $this->entityManager->getRepository(Product::class)->findAll();
+        $productsPage = $this->entityManager->getRepository(Product::class)
+            ->createQueryBuilder('p')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+        return $productsPage->getQuery()->getResult();
     }
 }
