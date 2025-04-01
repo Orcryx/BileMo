@@ -16,12 +16,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
-use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class UserController extends AbstractController
 {
 
-    public function __construct(private readonly UserManagerInterface $userManager, private readonly SerializerInterface $serializer) {}
+    public function __construct(private readonly UserManagerInterface $userManager, private readonly SerializerInterface $serializer, private readonly TagAwareCacheInterface $cache) {}
 
     #[Route('/api/users', name: 'users_list', methods: ['GET'])]
     public function getUsersList(Request $request): JsonResponse
@@ -32,10 +32,20 @@ class UserController extends AbstractController
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 3);
 
-        $users = $this->userManager->findAll($currentUser, $page, $limit);
-        $jsonUsers = $this->serializer->serialize($users, 'json', ['groups' => 'usersList']);
+        //Id qui représente la requête reçue par le controller
+        $idCache = sprintf('getUsersList-%d-%d-%d', $currentUser->getId(), $page, $limit);
 
-        return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
+        $users = $this->cache->get($idCache, function (ItemInterface $item) use ($currentUser, $page, $limit) {
+            // echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
+
+            $item->tag(['usersCache']); // Tag utilisateur unique
+
+            $usersList = $this->userManager->findAll($currentUser, $page, $limit);
+            return $this->serializer->serialize($usersList, 'json', ['groups' => 'usersList']);
+        });
+
+
+        return new JsonResponse($users, Response::HTTP_OK, [], true);
     }
 
     #[Route('/api/users/{id}', name: 'user_details', methods: ['GET'])]
@@ -44,13 +54,23 @@ class UserController extends AbstractController
         /** @var User $currentUser */
         $currentUser = $this->getUser();
 
-        $user = $this->userManager->find($id, $currentUser);
+        //Id qui représente la requête reçue par le controller
+        $idCache = sprintf('getUserById-%d-%d', $currentUser->getId(), $id);
 
-        if (!$user) {
-            return new JsonResponse(['message' => 'Utilisateur(s) non trouvé(s)'], Response::HTTP_NOT_FOUND);
-        }
+        //Mise en cache
+        $jsonUser = $this->cache->get($idCache, function (ItemInterface $item) use ($currentUser, $id) {
+            // echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
 
-        $jsonUser = $this->serializer->serialize($user, 'json', ['groups' => 'userDetails']);
+            $item->tag(['usersCache']);
+
+            $user = $this->userManager->find($id, $currentUser);
+
+            if (!$user) {
+                return new JsonResponse(['message' => 'Utilisateur(s) non trouvé(s)'], Response::HTTP_NOT_FOUND);
+            }
+
+            return $this->serializer->serialize($user, 'json', ['groups' => 'userDetails']);
+        });
 
         return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
     }
@@ -88,9 +108,9 @@ class UserController extends AbstractController
 
         // Sérialisation de la réponse
         $jsonUser = $this->serializer->serialize($user, 'json', ['groups' => 'userDetails']);
+        $this->cache->invalidateTags(['usersCache']);
 
         $location = $urlGenerator->generate('user_details', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
-
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ['Location' => $location], true);
     }
 
@@ -143,8 +163,8 @@ class UserController extends AbstractController
 
         // Générer la réponse JSON
         $jsonUser = $this->serializer->serialize($user, 'json', ['groups' => 'userDetails']);
+        $this->cache->invalidateTags(['usersCache']);
         $location = $urlGenerator->generate('user_details', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
-
         return new JsonResponse($jsonUser, Response::HTTP_OK, ['Location' => $location], true);
     }
 
@@ -162,9 +182,8 @@ class UserController extends AbstractController
         if (!$user) {
             return new JsonResponse(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
         }
-
+        $this->cache->invalidateTags(['usersCache']);
         $this->userManager->remove($user);
-
         return new JsonResponse(['message' => 'Utilisateur supprimé'], Response::HTTP_NO_CONTENT);
     }
 }
