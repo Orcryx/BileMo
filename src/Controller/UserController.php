@@ -10,7 +10,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\SerializerInterface;
+// use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext;
+use JMS\Serializer\DeserializationContext;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
@@ -36,12 +39,13 @@ class UserController extends AbstractController
         $idCache = sprintf('getUsersList-%d-%d-%d', $currentUser->getId(), $page, $limit);
 
         $users = $this->cache->get($idCache, function (ItemInterface $item) use ($currentUser, $page, $limit) {
-            // echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
+            echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
 
             $item->tag(['usersCache']); // Tag utilisateur unique
 
             $usersList = $this->userManager->findAll($currentUser, $page, $limit);
-            return $this->serializer->serialize($usersList, 'json', ['groups' => 'usersList']);
+            $context = SerializationContext::create()->setGroups(["usersList"]);
+            return $this->serializer->serialize($usersList, 'json',  $context);
         });
 
 
@@ -68,8 +72,9 @@ class UserController extends AbstractController
             if (!$user) {
                 return new JsonResponse(['message' => 'Utilisateur(s) non trouvé(s)'], Response::HTTP_NOT_FOUND);
             }
-
-            return $this->serializer->serialize($user, 'json', ['groups' => 'userDetails']);
+            //variable context est nécessaire pour le serialiser JMS, il prendra le groups
+            $context = SerializationContext::create()->setGroups(["userDetails"]);
+            return $this->serializer->serialize($user, 'json', $context);
         });
 
         return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
@@ -85,6 +90,8 @@ class UserController extends AbstractController
         // Désérialisation du JSON en objet User
         $user = $this->serializer->deserialize($request->getContent(), User::class, 'json');
         $content = $request->toArray();
+        $roles = $content['roles'] ?? ['ROLE_USER'];  // Si roles est absent, mettre ROLE_USER par défaut : A REVOIR
+        $user->setRoles($roles);
         $isCustomer = $content['customer']['id'] ?? -1;
 
         //Gérer les erreurs de validation
@@ -103,12 +110,17 @@ class UserController extends AbstractController
         $customer = $customerManager->find($isCustomer);
         $user->setCustomer($customer);
 
+        //Effacer le cache
+        $this->cache->invalidateTags(['usersCache']);
+
         // Sauvegarde du nouvel utilisateur
         $this->userManager->create($user, $currentUser);
 
+        //variable context est nécessaire pour le serialiser JMS, il prendra le groups
+        $context = SerializationContext::create()->setGroups(["userDetails"]);
+
         // Sérialisation de la réponse
-        $jsonUser = $this->serializer->serialize($user, 'json', ['groups' => 'userDetails']);
-        $this->cache->invalidateTags(['usersCache']);
+        $jsonUser = $this->serializer->serialize($user, 'json', $context);
 
         $location = $urlGenerator->generate('user_details', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ['Location' => $location], true);
@@ -127,13 +139,22 @@ class UserController extends AbstractController
             return new JsonResponse(['message' => 'Utilisateur non trouvé.'], Response::HTTP_NOT_FOUND);
         }
 
-        // Désérialisation et mise à jour des données
-        $this->serializer->deserialize(
-            $request->getContent(),
-            User::class,
-            'json',
-            [AbstractNormalizer::OBJECT_TO_POPULATE => $user]
-        );
+        // Désérialisation et mise à jour des données manuellement (A CAUSE DE JMS : nul !)
+        $newUser = $this->serializer->deserialize($request->getContent(), User::class, 'json');
+        // Mettre à jour uniquement les champs présents dans la requête
+        if ($newUser->getEmail()) {
+            $user->setEmail($newUser->getEmail());
+        }
+        if ($newUser->getFirstName()) {
+            $user->setFirstName($newUser->getFirstName());
+        }
+        if ($newUser->getLastName()) {
+            $user->setLastName($newUser->getLastName());
+        }
+        if ($newUser->getAddress()) {
+            $user->setAddress($newUser->getAddress());
+        }
+        $user->setUpdateAt(new \DateTimeImmutable());
 
         // Mise à jour du Customer si présent dans la requête
         $content = $request->toArray();
@@ -161,8 +182,11 @@ class UserController extends AbstractController
         // Enregistrer les modifications
         $this->userManager->edit($user);
 
+        //variable context est nécessaire pour le serialiser JMS, il prendra le groups
+        $context = SerializationContext::create()->setGroups(["userDetails"]);
+
         // Générer la réponse JSON
-        $jsonUser = $this->serializer->serialize($user, 'json', ['groups' => 'userDetails']);
+        $jsonUser =  $this->serializer->serialize($user, 'json', $context);
         $this->cache->invalidateTags(['usersCache']);
         $location = $urlGenerator->generate('user_details', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
         return new JsonResponse($jsonUser, Response::HTTP_OK, ['Location' => $location], true);
@@ -182,8 +206,9 @@ class UserController extends AbstractController
         if (!$user) {
             return new JsonResponse(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
         }
-        $this->cache->invalidateTags(['usersCache']);
         $this->userManager->remove($user);
+        $this->cache->invalidateTags(['usersCache']);
+
         return new JsonResponse(['message' => 'Utilisateur supprimé'], Response::HTTP_NO_CONTENT);
     }
 }

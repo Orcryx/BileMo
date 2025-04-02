@@ -7,7 +7,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Manager\ProductManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\SerializerInterface;
+// use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -29,13 +31,17 @@ final class ProductController extends AbstractController
         //item = stocker en cache, echo pour le debug, tag pour permettre de supprimer tous les éléments associés en une fois.
         //créer une condition qui verifie si ce qui est retourné par la fonction est déjà dans le cache
         $products = $this->cache->get($idCache, function (ItemInterface $item) use ($page, $limit) {
-            // echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
+            echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
 
             $item->tag(['productsCache']); // Ajout du tag pour invalidation future
 
             // Récupération des produits via le manager
             $productsList = $this->productManager->findAll($page, $limit);
-            return $this->serializer->serialize($productsList, 'json', ['groups' => 'productList']);
+
+            //variable context est nécessaire pour le serialiser JMS, il prendra le groups
+            $context = SerializationContext::create()->setGroups(["productList"]);
+
+            return $this->serializer->serialize($productsList, 'json', $context);
         });
 
         return new JsonResponse($products, Response::HTTP_OK, [], true);
@@ -50,7 +56,7 @@ final class ProductController extends AbstractController
         //Mise en cache
         $jsonProductDetails = $this->cache->get($idCache, function (ItemInterface $item) use ($id) {
 
-            // echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
+            echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
 
             $item->tag(['productsCache']);
 
@@ -58,7 +64,9 @@ final class ProductController extends AbstractController
             if (!$productDetails) {
                 return new JsonResponse(['message' => ' produit non trouvé'], Response::HTTP_NOT_FOUND);
             }
-            return $this->serializer->serialize($productDetails, 'json', ['groups' => 'productDetails']);
+            //variable context est nécessaire pour le serialiser JMS, il prendra le groups
+            $context = SerializationContext::create()->setGroups(["productDetails"]);
+            return $this->serializer->serialize($productDetails, 'json', $context);
         });
 
 
