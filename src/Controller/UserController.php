@@ -38,7 +38,6 @@ class UserController extends AbstractController
         $idCache = sprintf('getUsersList-%d-%d-%d', $currentUser->getId(), $page, $limit);
 
         $users = $this->cache->get($idCache, function (ItemInterface $item) use ($currentUser, $page, $limit) {
-            echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
 
             $item->tag(['usersCache']); // Tag utilisateur unique
 
@@ -62,14 +61,19 @@ class UserController extends AbstractController
 
         //Mise en cache
         $jsonUser = $this->cache->get($idCache, function (ItemInterface $item) use ($currentUser, $id) {
-            // echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
 
             $item->tag(['usersCache']);
 
             $user = $this->userManager->find($id, $currentUser);
 
             if (!$user) {
-                return new JsonResponse(['message' => 'Utilisateur(s) non trouvé(s)'], Response::HTTP_NOT_FOUND);
+                // Code erreur et message
+                $statusCode = Response::HTTP_NOT_FOUND; // 404
+                $data = [
+                    'status' => $statusCode,
+                    'message' => 'Utilisateur non trouvé',
+                ];
+                return new JsonResponse($data);
             }
             //variable context est nécessaire pour le serialiser JMS, il prendra le groups
             $context = SerializationContext::create()->setGroups(["userDetails"]);
@@ -135,7 +139,13 @@ class UserController extends AbstractController
         // Vérifier si l'utilisateur cible existe
         $user = $this->userManager->find($id, $currentUser);
         if (!$user) {
-            return new JsonResponse(['message' => 'Utilisateur non trouvé.'], Response::HTTP_NOT_FOUND);
+            // Code erreur et message
+            $statusCode = Response::HTTP_NOT_FOUND; // 404
+            $data = [
+                'status' => $statusCode,
+                'message' => 'Utilisateur non trouvé',
+            ];
+            return new JsonResponse($data, $statusCode);
         }
 
         // Désérialisation et mise à jour des données manuellement (A CAUSE DE JMS : nul !)
@@ -160,7 +170,13 @@ class UserController extends AbstractController
         if (isset($content['customer'])) {
             $customer = $customerManager->find($content['customer']);
             if (!$customer) {
-                return new JsonResponse(['message' => 'Client non trouvé.'], Response::HTTP_BAD_REQUEST);
+                // Code erreur et message
+                $statusCode = Response::HTTP_NOT_FOUND; // 404
+                $data = [
+                    'status' => $statusCode,
+                    'message' => 'Client non trouvé',
+                ];
+                return new JsonResponse($data);
             }
             $user->setCustomer($customer);
         }
@@ -203,7 +219,13 @@ class UserController extends AbstractController
         $user = $this->userManager->find($id, $currentUser);
 
         if (!$user) {
-            return new JsonResponse(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+            // Code erreur et message
+            $statusCode = Response::HTTP_NOT_FOUND; // 404
+            $data = [
+                'status' => $statusCode,
+                'message' => 'Utilisateur non trouvé',
+            ];
+            return new JsonResponse($data);
         }
         $this->userManager->remove($user);
         $this->cache->invalidateTags(['usersCache']);

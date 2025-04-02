@@ -31,7 +31,6 @@ final class ProductController extends AbstractController
         //item = stocker en cache, echo pour le debug, tag pour permettre de supprimer tous les éléments associés en une fois.
         //créer une condition qui verifie si ce qui est retourné par la fonction est déjà dans le cache
         $products = $this->cache->get($idCache, function (ItemInterface $item) use ($page, $limit) {
-            echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
 
             $item->tag(['productsCache']); // Ajout du tag pour invalidation future
 
@@ -56,13 +55,17 @@ final class ProductController extends AbstractController
         //Mise en cache
         $jsonProductDetails = $this->cache->get($idCache, function (ItemInterface $item) use ($id) {
 
-            echo ("CET ELEMENT N'EST PAS ENCORE EN CACHE");
-
             $item->tag(['productsCache']);
 
             $productDetails = $this->productManager->find($id);
             if (!$productDetails) {
-                return new JsonResponse(['message' => ' produit non trouvé'], Response::HTTP_NOT_FOUND);
+                // Code erreur et message
+                $statusCode = Response::HTTP_NOT_FOUND; // 404
+                $data = [
+                    'status' => $statusCode,
+                    'message' => 'Produit non trouvé',
+                ];
+                return new JsonResponse($data);
             }
             //variable context est nécessaire pour le serialiser JMS, il prendra le groups
             $context = SerializationContext::create()->setGroups(["productDetails"]);
