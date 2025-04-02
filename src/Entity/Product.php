@@ -4,10 +4,20 @@ namespace App\Entity;
 
 use App\Repository\ProductRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
+// use Symfony\Component\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Hateoas\Configuration\Annotation as Hateoas;
 
 
+#[Hateoas\Relation(
+    name: "self",
+    href: new Hateoas\Route(
+        name: "productDetails",
+        parameters: ["id" => "expr(object.getId())"]
+    ),
+    exclusion: new Hateoas\Exclusion(groups: ["productList", "productDetails"])
+)]
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 class Product
 {

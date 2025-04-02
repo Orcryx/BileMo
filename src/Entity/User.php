@@ -6,10 +6,40 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\Annotation\Groups;
+// use Symfony\Component\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Hateoas\Configuration\Annotation as Hateoas;
 
+
+#[Hateoas\Relation(
+    name: "self",
+    href: new Hateoas\Route(
+        name: "userDetails",
+        parameters: ["id" => "expr(object.getId())"]
+    ),
+    exclusion: new Hateoas\Exclusion(groups: ["usersList", "userDetails"])
+)]
+#[Hateoas\Relation(
+    name: "delete",
+    href: new Hateoas\Route(
+        name: "userDelete",
+        parameters: ["id" => "expr(object.getId())"]
+    ),
+    exclusion: new Hateoas\Exclusion(
+        groups: ["usersList", "userDetails"],
+        excludeIf: "expr(not is_granted('ROLE_CLIENT'))"
+    )
+)]
+#[Hateoas\Relation(
+    name: "create",
+    href: new Hateoas\Route(name: "userCreate"),
+    exclusion: new Hateoas\Exclusion(
+        groups: ["usersList"],
+        excludeIf: "expr(not is_granted('ROLE_CLIENT'))"
+    )
+)]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
