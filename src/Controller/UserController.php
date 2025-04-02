@@ -51,7 +51,7 @@ class UserController extends AbstractController
         return new JsonResponse($users, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/api/users/{id}', name: 'user_details', methods: ['GET'])]
+    #[Route('/api/users/{id}', name: 'userDetails', methods: ['GET'])]
     public function getUserById(int $id): JsonResponse
     {
         /** @var User $currentUser */
@@ -79,7 +79,7 @@ class UserController extends AbstractController
         return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/api/users', name: 'user_create', methods: ['POST'])]
+    #[Route('/api/users', name: 'userCreate', methods: ['POST'])]
     #[IsGranted('ROLE_CLIENT', message: "Vous n'avez pas les droits suffisants pour créer un utilisateur")]
     public function createUser(Request $request, UrlGeneratorInterface $urlGenerator,  CustomerManagerInterface $customerManager, ValidatorInterface $validator): JsonResponse
     {
@@ -125,7 +125,7 @@ class UserController extends AbstractController
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ['Location' => $location], true);
     }
 
-    #[Route('/api/users/{id}', name: 'user_update', methods: ['PUT'])]
+    #[Route('/api/users/{id}', name: 'userUpdate', methods: ['PUT'])]
     #[IsGranted('ROLE_CLIENT', message: "Vous n'avez pas les droits suffisants pour modifier un utilisateur")]
     public function updateUser(Request $request, UrlGeneratorInterface $urlGenerator, int $id, CustomerManagerInterface $customerManager, ValidatorInterface $validator): JsonResponse
     {
@@ -193,7 +193,7 @@ class UserController extends AbstractController
 
 
 
-    #[Route('/api/users/{id}', name: 'user_delete', methods: ['DELETE'])]
+    #[Route('/api/users/{id}', name: 'userDelete', methods: ['DELETE'])]
     #[IsGranted('ROLE_CLIENT', message: "Vous n'avez pas les droits suffisants pour supprimer un utilisateur")]
     public function deleteUser(int $id): JsonResponse
     {

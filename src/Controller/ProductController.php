@@ -13,8 +13,6 @@ use JMS\Serializer\SerializationContext;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
-use Hateoas\Configuration\Annotation as Hateoas;
-use Hateoas\HateoasBuilder;
 
 final class ProductController extends AbstractController
 {
