@@ -17,13 +17,42 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
 
 class UserController extends AbstractController
 {
 
     public function __construct(private readonly UserManagerInterface $userManager, private readonly SerializerInterface $serializer, private readonly TagAwareCacheInterface $cache) {}
 
-    #[Route('/api/users', name: 'users_list', methods: ['GET'])]
+    /**
+     * This method returns the list of all users.
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Return the list of all user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"usersList"}))
+     *     )
+     * )
+     * @OA\Parameter(
+     *     name="page",
+     *     in="query",
+     *     description="The page you want to recover",
+     *     @OA\Schema(type="int", default=1)
+     * )
+     * @OA\Parameter(
+     *     name="limit",
+     *     in="query",
+     *     description="The number of elements you want to retrieve",
+     *     @OA\Schema(type="int", default=3)
+     * )
+     * @OA\Tag(name="Users")
+     * @return JsonResponse
+     **/
+    #[Route('/api/users/{page}/{limit}', name: 'users_list', methods: ['GET'])]
     public function getUsersList(Request $request): JsonResponse
     {
         /** @var User $currentUser */
@@ -48,6 +77,30 @@ class UserController extends AbstractController
         return new JsonResponse($users, Response::HTTP_OK, [], true);
     }
 
+    /**
+     *
+     * This method return the detail of a user.
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Return the detail of user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"userDetails"}))
+     *     )
+     * )
+     *
+     * @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     description="The identifiant of a user",
+     *     @OA\Schema(type="integer")
+     * )
+     * @OA\Tag(name="Users")
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
     #[Route('/api/users/{id}', name: 'userDetails', methods: ['GET'])]
     public function getUserById(int $id): JsonResponse
     {
@@ -81,6 +134,51 @@ class UserController extends AbstractController
         return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
     }
 
+    /**
+     * This method create a user.
+     *
+     * @OA\Response(
+     *      response=200,
+     *     description="Return the list of all user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"userDetails"}))
+     *     )
+     * )
+     * @OA\RequestBody(
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *              @OA\Schema(
+     *               type="object",
+     *          @OA\Property(
+     *              property="email",
+     *              type="string",
+     *              example="utilisateur@bile.mo"
+     *          ),
+     *          @OA\Property(
+     *              property="password",
+     *              type="string",
+     *              example="password"
+     *          ),
+     *          @OA\Property(
+     *              property="role",
+     *              type="array",
+     *              example="["ROLE_USER"]"
+     *          ),
+     *          @OA\Property(
+     *              property="customer",
+     *              type="array",
+     *              example=" "id": "3""
+     *          ),
+     *      )
+     *  )
+     * @OA\Tag(name="Users")
+     * @param Request $request
+     * @param UrlGeneratorInterface $urlGenerator
+     * @param CustomerManagerInterface $customerManager
+     * @param ValidatorInterface $validator
+     * @return JsonResponse
+     **/
     #[Route('/api/users', name: 'userCreate', methods: ['POST'])]
     #[IsGranted('ROLE_CLIENT', message: "Vous n'avez pas les droits suffisants pour créer un utilisateur")]
     public function createUser(Request $request, UrlGeneratorInterface $urlGenerator,  CustomerManagerInterface $customerManager, ValidatorInterface $validator): JsonResponse
@@ -123,9 +221,82 @@ class UserController extends AbstractController
         // Sérialisation de la réponse
         $jsonUser = $this->serializer->serialize($user, 'json', $context);
 
-        $location = $urlGenerator->generate('user_details', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $location = $urlGenerator->generate('userCreate', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ['Location' => $location], true);
     }
+
+    /**
+     *   This method update a user.
+     * @OA\Put(
+     *     path="/api/users/{id}",
+     *     summary="Update a user",
+     *     description="This method allows updating an existing user's details.",
+     *     operationId="updateUser",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="The identifier of the user to update",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="User object that needs to be updated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="email", type="string", example="user@example.com"),
+     *             @OA\Property(property="firstName", type="string", example="John"),
+     *             @OA\Property(property="lastName", type="string", example="Doe"),
+     *             @OA\Property(property="address", type="string", example="123 Main St"),
+     *             @OA\Property(property="customer", type="integer", example=1)  // customer is optional, but shown here
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="User updated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="integer", example=1),
+     *             @OA\Property(property="email", type="string", example="user@example.com"),
+     *             @OA\Property(property="firstName", type="string", example="John"),
+     *             @OA\Property(property="lastName", type="string", example="Doe"),
+     *             @OA\Property(property="address", type="string", example="123 Main St"),
+     *             @OA\Property(
+     *                 property="_links",
+     *                 type="object",
+     *                 @OA\Property(property="self", type="string", example="/api/users/1")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid data provided",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="field", type="string", example="email"),
+     *                 @OA\Property(property="message", type="string", example="This value is not valid")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User or customer not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="integer", example=404),
+     *             @OA\Property(property="message", type="string", example="Utilisateur non trouvé")
+     *         )
+     *     ),
+     *     @OA\Tag(name="Users")
+     * )
+     * 
+     * @param int $id
+     * @param Request $request
+     * @param UrlGeneratorInterface $urlGenerator
+     * @param CustomerManagerInterface $customerManager
+     * @param ValidatorInterface $validator
+     * @return JsonResponse
+     */
 
     #[Route('/api/users/{id}', name: 'userUpdate', methods: ['PUT'])]
     #[IsGranted('ROLE_CLIENT', message: "Vous n'avez pas les droits suffisants pour modifier un utilisateur")]
@@ -201,12 +372,32 @@ class UserController extends AbstractController
         // Générer la réponse JSON
         $jsonUser =  $this->serializer->serialize($user, 'json', $context);
         $this->cache->invalidateTags(['usersCache']);
-        $location = $urlGenerator->generate('user_details', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $location = $urlGenerator->generate('userCreate', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
         return new JsonResponse($jsonUser, Response::HTTP_OK, ['Location' => $location], true);
     }
 
 
-
+    /**
+     *   This method delete a user.
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Return delete a user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items()
+     *     )
+     * )
+     * @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     description="The identifiant of a user",
+     *     @OA\Schema(type="int")
+     * )
+     * @OA\Tag(name="Users")
+     * @param int $id
+     * @return JsonResponse
+     */
     #[Route('/api/users/{id}', name: 'userDelete', methods: ['DELETE'])]
     #[IsGranted('ROLE_CLIENT', message: "Vous n'avez pas les droits suffisants pour supprimer un utilisateur")]
     public function deleteUser(int $id): JsonResponse

@@ -8,3 +8,8 @@ controllers:
 auth:
   path: /auth
   methods: ['POST']
+  # config/routes.yaml
+app.swagger:
+    path: /api/doc.json
+    methods: GET
+    defaults: { _controller: nelmio_api_doc.controller.swagger }
