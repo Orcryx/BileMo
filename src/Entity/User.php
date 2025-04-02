@@ -13,34 +13,33 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Hateoas\Configuration\Annotation as Hateoas;
 
 
-/**
- * @Hateoas\Relation(
- *      "self",
- *      href = @Hateoas\Route(
- *          "userDetails",
- *          parameters = { "id" = "expr(object.getId())" }
- *      ),
- *      exclusion = @Hateoas\Exclusion(groups={"usersList", "userDetails"})
- * )
- * 
- * @Hateoas\Relation(
- *      "delete",
- *      href = @Hateoas\Route(
- *          "userDelete",
- *          parameters = { "id" = "expr(object.getId())" },
- *      ),
- *      exclusion = @Hateoas\Exclusion(groups={"usersList", "userDetails"}, excludeIf = "expr(not is_granted('ROLE_CLIENT'))"),
- * ) 
- * 
- * @Hateoas\Relation(
- *      "create",
- *      href = @Hateoas\Route(
- *          "userCreate"
- *      ),
- *      exclusion = @Hateoas\Exclusion(groups={"usersList", "userDetails"}, excludeIf = "expr(not is_granted('ROLE_CLIENT'))"),
- * ) 
- *  
- * */
+#[Hateoas\Relation(
+    name: "self",
+    href: new Hateoas\Route(
+        name: "userDetails",
+        parameters: ["id" => "expr(object.getId())"]
+    ),
+    exclusion: new Hateoas\Exclusion(groups: ["usersList", "userDetails"])
+)]
+#[Hateoas\Relation(
+    name: "delete",
+    href: new Hateoas\Route(
+        name: "userDelete",
+        parameters: ["id" => "expr(object.getId())"]
+    ),
+    exclusion: new Hateoas\Exclusion(
+        groups: ["usersList", "userDetails"],
+        excludeIf: "expr(not is_granted('ROLE_CLIENT'))"
+    )
+)]
+#[Hateoas\Relation(
+    name: "create",
+    href: new Hateoas\Route(name: "userCreate"),
+    exclusion: new Hateoas\Exclusion(
+        groups: ["usersList", "userDetails"],
+        excludeIf: "expr(not is_granted('ROLE_CLIENT'))"
+    )
+)]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
