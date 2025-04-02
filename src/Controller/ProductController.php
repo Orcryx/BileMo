@@ -13,6 +13,8 @@ use JMS\Serializer\SerializationContext;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Hateoas\Configuration\Annotation as Hateoas;
+use Hateoas\HateoasBuilder;
 
 final class ProductController extends AbstractController
 {
@@ -47,7 +49,7 @@ final class ProductController extends AbstractController
         return new JsonResponse($products, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/api/products/{id}', name: 'product')]
+    #[Route('/api/products/{id}', name: 'productDetails', methods: ['GET'])]
     public function getProductDetails(int $id): JsonResponse
     {
         //Id qui représente la requête reçue par le controller
