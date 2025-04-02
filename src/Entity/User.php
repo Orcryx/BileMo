@@ -36,7 +36,7 @@ use Hateoas\Configuration\Annotation as Hateoas;
     name: "create",
     href: new Hateoas\Route(name: "userCreate"),
     exclusion: new Hateoas\Exclusion(
-        groups: ["usersList", "userDetails"],
+        groups: ["usersList"],
         excludeIf: "expr(not is_granted('ROLE_CLIENT'))"
     )
 )]
