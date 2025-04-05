@@ -53,6 +53,7 @@ Il va falloir que j'expose un certain nombre d’API pour que les applications d
 
 5. **Variables d'environnement** 
     Si nécessaire, créer le fichier .env.local et compléter la value pour la liste des variables suivantes : 
+    ```bash
     DB_USER=""
     DB_PASSWORD=""
     DB_HOST=""
