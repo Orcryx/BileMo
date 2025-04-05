@@ -12,15 +12,15 @@ Je suis en charge du développement de la vitrine de téléphones mobiles de l�
 Il va falloir que j'expose un certain nombre d’API pour que les applications des autres plateformes web puissent effectuer des opérations.
 
 
-## Table des matières
+## 🧭 Table des matières
 
 1. [Prérequis](#prérequis)
 2. [Installation](#installation)
 3. [Utilisation](#utilisation)
-4. [Documentation](#documentation)
 
+---
 
-## Prérequis
+##  📦 Prérequis
 
 -   PHP version 8.3.4 : Le projet est compatible avec PHP8.
 -   composer version 2.7.2 : Assurez-vous que Composer est installé pour gérer les dépendances.
@@ -30,28 +30,56 @@ Il va falloir que j'expose un certain nombre d’API pour que les applications d
 -   MySQL : Version recommandée : 8.0.19 ou plus récent.
 -   Serveur local : Apache ou un serveur équivalent pour exécuter l’application en local.
 
+---
 
-## Installation
+## ⚙️ Installation
 
-1. Cloner le dépôt : 
+1. **Cloner le dépôt :** 
  - Clonez ce dépôt sur votre machine locale.
 
-2. Accéder au dossier du projet :
+2. **Accéder au dossier du projet :**
+    ```bash
     - cd projects/
     - git clone ...
 
-3. Installer les dépendances avec Composer :
+3. **Installer les dépendances avec Composer :**
+    ```bash
     - composer install
 
-4. Installer symfony (voir composer.json)
+4. **Installer symfony (voir composer.json)**
+    ```bash
     - cd my-project/
     - composer install
 
-5. Variables d'environnement 
+5. **Variables d'environnement** 
+    Si nécessaire, créer le fichier .env.local et compléter la value pour la liste des variables suivantes : 
+    ```bash
+    DB_USER=""
+    DB_PASSWORD=""
+    DB_HOST=""
+    DB_PORT=""
+    DB_NAME=""
+    DB_SERVER_VERSION="8.3"
+    DB_CHARSET="utf8mb4"
 
-6. Fixtures 
+    DATABASE_URL="mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?serverVersion=${DB_SERVER_VERSION}&charset=${DB_CHARSET}"
+
+    ###> lexik/jwt-authentication-bundle ###
+    JWT_SECRET_KEY=""
+    JWT_PUBLIC_KEY=""
+    JWT_PASSPHRASE=""
+    ###< lexik/jwt-authentication-bundle ###
+
+6. **Fixtures & Migrations**
+    Effectuer la migrations puis installer les fixtures
+    ```bash
+    php bin/console doctrine:migrations:migrate
+    php bin/console doctrine:fixtures:load
 
 
 ## Utilisation
 
-Une fois installé, consultez la documentation de l'API à l'adresse suivante :
+Une fois installé, consultez la documentation de l'API. 
+    - Avec Nelmio à l'adresse suivante : https://127.0.0.1:8000/api/doc
+    - Avec Postman : l'environnement et la collection du projet son dans le dossier /postman 
+
