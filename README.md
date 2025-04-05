@@ -79,7 +79,7 @@ Il va falloir que j'expose un certain nombre d’API pour que les applications d
 
 ## Utilisation
 
-Une fois installé, consultez la documentation de l'API. 
-    - Avec Nelmio à l'adresse suivante : https://127.0.0.1:8000/api/doc
-    - Avec Postman : l'environnement et la collection du projet son dans le dossier /postman 
+Une fois installé, consultez la documentation de l'API :
+- Avec Nelmio à l'adresse suivante : https://127.0.0.1:8000/api/doc
+- Avec Postman : l'environnement et la collection du projet son dans le dossier /postman 
 
