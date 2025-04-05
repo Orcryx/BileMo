@@ -28,7 +28,7 @@ class UserController extends AbstractController
     /**
      * This method returns the list of all users.
      **/
-    #[Route('/api/users', name: 'users_list', methods: ['GET'])]
+    #[Route('/api/users/{page}/{limit}', name: 'users_list', methods: ['GET'])]
     #[OA\Response(
         response: 200,
         description: 'Returns the rewards of all your users',
