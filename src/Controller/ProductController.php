@@ -2,24 +2,53 @@
 
 namespace App\Controller;
 
+use App\Entity\Product;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Manager\ProductManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
-// use Symfony\Component\Serializer\SerializerInterface;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Nelmio\ApiDocBundle\Attribute\Model;
+use OpenApi\Attributes as OA;
+
 
 final class ProductController extends AbstractController
 {
 
     public function __construct(private readonly ProductManagerInterface $productManager, private readonly SerializerInterface $serializer, private readonly TagAwareCacheInterface $cache) {}
 
-    #[Route('/api/products', name: 'products', methods: ['GET'])]
+
+    /**
+     * List the rewards of the all products.
+     *
+     */
+    #[Route('/api/products/{page}/{limit}', name: 'products', methods: ['GET'])]
+    #[OA\Response(
+        response: 200,
+        description: 'Returns the rewards of all products',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Product::class, groups: ['productList']))
+        )
+    )]
+    #[OA\Parameter(
+        name: "page",
+        in: "query",
+        description: "The page you want to recover",
+        schema: new OA\Schema(type: "int", default: 1)
+    )]
+    #[OA\Parameter(
+        name: "limit",
+        in: "query",
+        description: "The number of elements you want to retrieve",
+        schema: new OA\Schema(type: "int", default: 3)
+    )]
+    #[OA\Tag(name: 'Products')]
     public function getProductsList(Request $request): JsonResponse
     {
         $page = $request->get('page', 1);
@@ -46,6 +75,26 @@ final class ProductController extends AbstractController
         return new JsonResponse($products, Response::HTTP_OK, [], true);
     }
 
+    /**
+     * List the rewards of the specified product.
+     *
+     */
+    #[OA\Response(
+        response: 200,
+        description: "Return the detail of product",
+        content: new OA\JsonContent(
+            type: "array",
+            items: new OA\Items(ref: new Model(type: Product::class, groups: ["productDetails"]))
+        )
+    )]
+    #[OA\Parameter(
+        name: "id",
+        in: "path",
+        description: "The identifiant of a product",
+        required: true,
+        schema: new OA\Schema(type: "integer")
+    )]
+    #[OA\Tag(name: "Products")]
     #[Route('/api/products/{id}', name: 'productDetails', methods: ['GET'])]
     public function getProductDetails(int $id): JsonResponse
     {

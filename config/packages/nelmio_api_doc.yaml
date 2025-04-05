@@ -1,0 +1,60 @@
+# config\packages\nelmio_api_doc.yaml
+nelmio_api_doc:
+    # models:
+    #     names:
+    #         - { alias: Product, type: App\Entity\Product, groups: [productList]}
+    #         - { alias: ProductDetail, type: App\Entity\Product, groups: [productDetails]}
+    #         - { alias: userDetails, type: App\Entity\User, groups: [userDetails]}
+    #         - { alias: usersList, type: App\Entity\User, groups: [usersList]}
+    documentation:
+        info:
+            title: BILEMO
+            description: Une API pour le projet n°7 d'OpenClassrooms avec des produits, des utilisateurs !
+            version: 2.0.0
+        paths:
+            /auth:
+                post:
+                    operationId: postCredentialsItem
+                    tags:
+                        - Token
+                    summary: Permet d'obtenir le token JWT pour se logger.
+                    requestBody:
+                        description: Crée un nouveau token JWT
+                        content:
+                            application/json:
+                                schema:
+                                    $ref: '#/components/schemas/Credentials'
+                    responses:
+                        '200':
+                            description: Récupère le token JWT
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/Token'
+        components:
+            schemas:
+                Token:
+                    type: object
+                    properties:
+                        token:
+                            type: string
+                            readOnly: true
+                Credentials:
+                    type: object
+                    properties:
+                        email:
+                            type: string
+                            default: customer_2@bilemo.com
+                        password:
+                            type: string
+                            default: password
+            securitySchemes:
+                bearerAuth:
+                    type: apiKey
+                    in: header
+                    name: Authorization # or another header name
+        security:
+            - bearerAuth: []
+    areas: # to filter documented areas
+        path_patterns:
+            - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
