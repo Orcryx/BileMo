@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Product;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -12,9 +13,9 @@ use JMS\Serializer\SerializationContext;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
-use Psr\Cache\InvalidArgumentException;
-use Exception;
-use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Attribute\Model;
+use OpenApi\Attributes as OA;
+
 
 final class ProductController extends AbstractController
 {
@@ -22,34 +23,32 @@ final class ProductController extends AbstractController
     public function __construct(private readonly ProductManagerInterface $productManager, private readonly SerializerInterface $serializer, private readonly TagAwareCacheInterface $cache) {}
 
 
-
     /**
-     * This method returns the list of all products.
+     * List the rewards of the all products.
      *
-     * @OA\Response(
-     *     response=200,
-     *     description="Return the list of all products",
-     *     @OA\JsonContent(
-     *        type="array",
-     *        @OA\Items(ref=@Model(type=Product::class, groups={"productList"}))
-     *     )
-     * )
-     * @OA\Parameter(
-     *     name="page",
-     *     in="query",
-     *     description="The page you want to recover",
-     *     @OA\Schema(type="int", default=1)
-     * )
-     * @OA\Parameter(
-     *     name="limit",
-     *     in="query",
-     *     description="The number of elements you want to retrieve",
-     *     @OA\Schema(type="int", default=3)
-     * )
-     * @OA\Tag(name="Products")
-     * @return JsonResponse
-     **/
+     */
     #[Route('/api/products/{page}/{limit}', name: 'products', methods: ['GET'])]
+    #[OA\Response(
+        response: 200,
+        description: 'Returns the rewards of all products',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Product::class, groups: ['productList']))
+        )
+    )]
+    #[OA\Parameter(
+        name: "page",
+        in: "query",
+        description: "The page you want to recover",
+        schema: new OA\Schema(type: "int", default: 1)
+    )]
+    #[OA\Parameter(
+        name: "limit",
+        in: "query",
+        description: "The number of elements you want to retrieve",
+        schema: new OA\Schema(type: "int", default: 3)
+    )]
+    #[OA\Tag(name: 'Products')]
     public function getProductsList(Request $request): JsonResponse
     {
         $page = $request->get('page', 1);
@@ -77,30 +76,25 @@ final class ProductController extends AbstractController
     }
 
     /**
+     * List the rewards of the specified product.
      *
-     * This method return the detail of a product.
-     *
-     * @OA\Response(
-     *     response=200,
-     *     description="Return the detail of product",
-     *     @OA\JsonContent(
-     *        type="array",
-     *        @OA\Items(ref=@Model(type=Product::class, groups={"productDetails"}))
-     *     )
-     * )
-     *
-     * @OA\Parameter(
-     *     name="id",
-     *     in="path",
-     *     description="The identifiant of a product",
-     *     @OA\Schema(type="integer")
-     * )
-     * @OA\Tag(name="Products")
-     *
-     * @param int $id
-     * @return JsonResponse
-     * @throws InvalidArgumentException
      */
+    #[OA\Response(
+        response: 200,
+        description: "Return the detail of product",
+        content: new OA\JsonContent(
+            type: "array",
+            items: new OA\Items(ref: new Model(type: Product::class, groups: ["productDetails"]))
+        )
+    )]
+    #[OA\Parameter(
+        name: "id",
+        in: "path",
+        description: "The identifiant of a product",
+        required: true,
+        schema: new OA\Schema(type: "integer")
+    )]
+    #[OA\Tag(name: "Products")]
     #[Route('/api/products/{id}', name: 'productDetails', methods: ['GET'])]
     public function getProductDetails(int $id): JsonResponse
     {
